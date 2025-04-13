@@ -16,6 +16,18 @@ router = APIRouter()
 db = db_helper.session_getter
 
 
+@router.get("/users/check-admin", response_model=dict)
+async def check_is_admin(
+    user_id: int = Header(...),
+    db: AsyncSession = Depends(db)
+):
+    """
+    Проверяет, является ли пользователь администратором.
+    """
+    is_admin = await verify_admin(user_id, db)
+    return {"is_admin": is_admin}
+
+
 @router.get("/bookings", response_model=booking_schema.BookingListResponse)
 async def get_bookings(
     user_id: int = Header(...),
