@@ -49,6 +49,7 @@ async def create_booking(
     user_id: int = Depends(verify_telegram_auth),
     db: AsyncSession = Depends(db)
 ):
+    logger.info("Полученные данные для создания бронирования:", booking.model_dump())
     if booking.start_date > booking.end_date:
         raise HTTPException(status_code=400, detail="Дата начала должна быть раньше даты окончания")
     
