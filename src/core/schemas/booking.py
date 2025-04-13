@@ -2,20 +2,15 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import date
 
-
-class BookingBase(BaseModel):
-    id: int
+# Схема для входящих данных при создании бронирования: поля id, status и user_id не нужны.
+class BookingCreate(BaseModel):
     start_date: date
     end_date: date
     people_count: int
     event_theme: str
     event_description: Optional[str] = None
 
-
-class BookingCreate(BookingBase):
-    user_id: int
-
-
+# Схема для обновления бронирования — все поля необязательны
 class BookingUpdate(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
@@ -23,14 +18,21 @@ class BookingUpdate(BaseModel):
     event_theme: Optional[str] = None
     event_description: Optional[str] = None
 
-
-class Booking(BookingBase):
+# Схема для чтения (ответ) с сервера, включает служебные поля
+class Booking(BaseModel):
+    id: int
     user_id: int
+    start_date: date
+    end_date: date
+    people_count: int
+    event_theme: str
+    event_description: Optional[str] = None
     status: str
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True  # Аналог orm_mode для Pydantic v2
+    }
 
-
+# Если нужна схема для запроса списка бронирований по admin_id
 class BookingListRequest(BaseModel):
     admin_id: Optional[int] = None
