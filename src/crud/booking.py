@@ -11,7 +11,7 @@ async def get_bookings_db(
     is_admin: bool = False,
     user_id: Optional[int] = None
 ) -> List[booking_schema.Booking]:
-    if is_admin and not user_id:
+    if is_admin:
         stmt = select(booking_model.Booking)
     elif user_id:
         stmt = select(booking_model.Booking).where(booking_model.Booking.user_id == user_id)
