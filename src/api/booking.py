@@ -99,7 +99,7 @@ async def create_booking(
     return db_booking
 
 
-@router.put("/bookings/{booking_id}/approve", response_model=booking_schema.Booking)
+@router.patch("/bookings/{booking_id}/approve", response_model=booking_schema.Booking)
 async def approve_booking(
     booking_id: int,
     user_id: int = Header(...),
@@ -125,7 +125,7 @@ async def approve_booking(
     return booking
 
 
-@router.put("/bookings/{booking_id}/reject", response_model=booking_schema.Booking)
+@router.patch("/bookings/{booking_id}/reject", response_model=booking_schema.Booking)
 async def reject_booking(
     booking_id: int,
     user_id: int = Header(...),
