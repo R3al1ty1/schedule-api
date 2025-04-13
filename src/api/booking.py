@@ -18,7 +18,7 @@ db = db_helper.session_getter
 
 @router.get("/bookings", response_model=List[booking_schema.Booking])
 async def get_bookings(
-    user_id: int = Depends(verify_telegram_auth),
+    user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     """
@@ -46,7 +46,7 @@ async def get_bookings(
 @router.post("/bookings/create", response_model=booking_schema.Booking, status_code=status.HTTP_201_CREATED)
 async def create_booking(
     booking: booking_schema.BookingCreate,
-    user_id: int = Depends(verify_telegram_auth),
+    user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     logger.info("Полученные данные для создания бронирования:", booking.model_dump())
@@ -156,7 +156,7 @@ async def reject_booking(
 async def update_booking(
     booking_id: int,
     booking_update: booking_schema.BookingUpdate,
-    user_id: int = Depends(verify_telegram_auth),
+    user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     stmt = select(booking_model.Booking).where(booking_model.Booking.id == booking_id)
@@ -220,7 +220,7 @@ async def update_booking(
 @router.delete("/bookings/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_booking(
     booking_id: int,
-    user_id: int = Depends(verify_telegram_auth),
+    user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     is_admin = await verify_admin(user_id, db)
