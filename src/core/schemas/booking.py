@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 from datetime import date
 
 # Схема для входящих данных при создании бронирования: поля id, status и user_id не нужны.
@@ -36,3 +36,7 @@ class Booking(BaseModel):
 # Если нужна схема для запроса списка бронирований по admin_id
 class BookingListRequest(BaseModel):
     admin_id: Optional[int] = None
+
+
+class BookingListResponse(BaseModel):
+    result: List[Booking]

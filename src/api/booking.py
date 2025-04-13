@@ -16,31 +16,38 @@ router = APIRouter()
 db = db_helper.session_getter
 
 
-@router.get("/bookings", response_model=List[booking_schema.Booking])
+@router.get("/bookings", response_model=booking_schema.BookingListResponse)
 async def get_bookings(
     user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     """
     Получение списка бронирований.
-    - Если передан user_id в query параметрах, возвращает бронирования конкретного пользователя
-    - Если не передан ни admin_id, ни user_id, возвращает ошибку
+    - Если передан user_id в заголовке, возвращает бронирования конкретного пользователя
+    - Если не передан user_id, возвращает ошибку
     """
+    logger.info(f"Получен запрос на получение бронирований: user_id={user_id}")
+    
     if user_id is None:
+        logger.error("Отсутствует user_id в заголовке")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Необходимо указать либо user_id, либо admin_id в параметрах запроса"
+            detail="Необходимо указать user_id в заголовке"
         )
 
     try:
         is_admin = await verify_admin(user_id, db)
-    except Exception:
+        logger.info(f"Результат проверки админа: is_admin={is_admin}")
+    except Exception as e:
+        logger.error(f"Ошибка проверки админа: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Указанный admin_id не имеет прав администратора"
+            detail="Указанный user_id не имеет прав администратора"
         )
 
-    return await get_bookings_db(db=db, is_admin=is_admin, user_id=user_id)
+    bookings = await get_bookings_db(db=db, is_admin=is_admin, user_id=user_id)
+    logger.info(f"Возвращено {len(bookings)} бронирований")
+    return {"result": bookings}
 
 
 @router.post("/bookings/create", response_model=booking_schema.Booking, status_code=status.HTTP_201_CREATED)
@@ -49,7 +56,6 @@ async def create_booking(
     user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
-    logger.info("Полученные данные для создания бронирования:", booking.model_dump())
     if booking.start_date > booking.end_date:
         raise HTTPException(status_code=400, detail="Дата начала должна быть раньше даты окончания")
     
