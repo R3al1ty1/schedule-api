@@ -7,7 +7,7 @@ from typing import List
 from fastapi import Depends, HTTPException,  Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from core import db_helper
+from core.db_helper import db_helper
 from core.models.admin import Admin
 from core.models import booking as booking_model
 from dotenv import load_dotenv
