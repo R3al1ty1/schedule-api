@@ -4,6 +4,7 @@ import hashlib
 import json
 import datetime
 from typing import List
+from urllib.parse import unquote
 from fastapi import Depends, HTTPException,  Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,7 +53,6 @@ async def check_venue_availability(db: AsyncSession, start_date: datetime.dateti
     
     return existing_bookings
 
-
 def verify_telegram_auth(init_data: str = Header(...)):
     BOT_TOKEN = os.getenv("BOT_TOKEN")
     secret_key = hashlib.sha256(BOT_TOKEN.encode()).digest()
@@ -61,13 +61,13 @@ def verify_telegram_auth(init_data: str = Header(...)):
     hash_value = data.pop("hash", None)
 
     data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
-
     calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
     if calculated_hash != hash_value:
         raise HTTPException(status_code=403, detail="Неверная подпись initData")
 
-    user_data = json.loads(data["user"])
+    user_str = unquote(data["user"])
+    user_data = json.loads(user_str)
     user_id = user_data["id"]
     return user_id
 
