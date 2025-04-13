@@ -66,7 +66,7 @@ ALTER TABLE ONLY public.admins ALTER COLUMN id SET DEFAULT nextval('public.admin
 ALTER TABLE ONLY public.bookings ALTER COLUMN id SET DEFAULT nextval('public.bookings_id_seq'::regclass);
 
 COPY public.admins (id, user_id) FROM stdin;
-1	123456
+1	204980681
 \.
 
 COPY public.bookings (id, user_id, start_date, end_date, people_count, event_theme, event_description, status) FROM stdin;

@@ -211,7 +211,7 @@ async def update_booking(
         can_share = True
         
         for existing in existing_bookings:
-            if existing.id != booking.id:  # Skip the current booking
+            if existing.id != booking.id:
                 if existing.event_theme != booking.event_theme:
                     can_share = False
                     break
@@ -274,7 +274,6 @@ async def get_calendar_data(
     except ValueError:
         raise HTTPException(status_code=400, detail="Неверный формат даты. Используйте YYYY-MM-DD")
 
-    # Получаем все бронирования в указанном диапазоне
     stmt = select(booking_model.Booking).where(
         booking_model.Booking.start_date <= end,
         booking_model.Booking.end_date >= start
@@ -282,7 +281,6 @@ async def get_calendar_data(
     result = await db.execute(stmt)
     bookings = result.scalars().all()
 
-    # Создаем словарь для агрегации данных по дням
     calendar_data = defaultdict(lambda: {"total_people": 0, "themes": set()})
     
     for booking in bookings:
