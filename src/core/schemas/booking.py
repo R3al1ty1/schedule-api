@@ -10,6 +10,11 @@ class BookingCreate(BaseModel):
     event_theme: str
     event_description: Optional[str] = None
 
+    class Config:
+        json_encoders = {
+            date: lambda v: v.strftime('%Y-%m-%d')
+        }
+
 # Схема для обновления бронирования — все поля необязательны
 class BookingUpdate(BaseModel):
     start_date: Optional[date] = None
