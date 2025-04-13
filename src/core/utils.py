@@ -52,31 +52,31 @@ async def check_venue_availability(db: AsyncSession, start_date: datetime.dateti
     return existing_bookings
 
 
-def verify_telegram_auth(init_data: str = Header(...)):
-    BOT_TOKEN = os.getenv("BOT_TOKEN")
-    secret_key = hashlib.sha256(BOT_TOKEN.encode()).digest()
-
-    data = dict(part.split("=") for part in init_data.split("&"))
-    hash_value = data.pop("hash", None)
-
-    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
-
-    calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-
-    if calculated_hash != hash_value:
-        raise HTTPException(status_code=403, detail="Неверная подпись initData")
-
-    user_data = json.loads(data["user"])
-    user_id = user_data["id"]
-    return user_id
-
-
 # def verify_telegram_auth(init_data: str = Header(...)):
-#     try:
-#         user_data = json.loads(init_data.split("&")[0].split("=")[1])
-#         return user_data["id"]
-#     except:
-#         raise HTTPException(status_code=403, detail="Ошибка initData")
+#     BOT_TOKEN = os.getenv("BOT_TOKEN")
+#     secret_key = hashlib.sha256(BOT_TOKEN.encode()).digest()
+
+#     data = dict(part.split("=") for part in init_data.split("&"))
+#     hash_value = data.pop("hash", None)
+
+#     data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
+
+#     calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+
+#     if calculated_hash != hash_value:
+#         raise HTTPException(status_code=403, detail="Неверная подпись initData")
+
+#     user_data = json.loads(data["user"])
+#     user_id = user_data["id"]
+#     return user_id
+
+
+def verify_telegram_auth(init_data: str = Header(...)):
+    try:
+        user_data = json.loads(init_data.split("&")[0].split("=")[1])
+        return user_data["id"]
+    except:
+        raise HTTPException(status_code=403, detail="Ошибка initData")
 
 
 async def get_admin_user(user_id: int = Depends(verify_telegram_auth), db: AsyncSession = Depends(db)):
