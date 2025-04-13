@@ -151,7 +151,6 @@ async def reject_booking(
     await db.refresh(booking)
     return booking
 
-
 @router.put("/bookings/{booking_id}", response_model=booking_schema.Booking)
 async def update_booking(
     booking_id: int,
@@ -216,7 +215,6 @@ async def update_booking(
     await db.commit()
     await db.refresh(booking)
     return booking
-
 
 @router.delete("/bookings/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_booking(
