@@ -45,3 +45,9 @@ class BookingListRequest(BaseModel):
 
 class BookingListResponse(BaseModel):
     result: List[Booking]
+
+
+class CalendarDay(BaseModel):
+    date: str
+    total_people: int
+    themes: List[str]
