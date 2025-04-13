@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 
 # Схема для входящих данных при создании бронирования: поля id, status и user_id не нужны.
 class BookingCreate(BaseModel):
-    start_date: date
-    end_date: date
+    start_date: datetime
+    end_date: datetime
     people_count: int
     event_theme: str
     event_description: Optional[str] = None
