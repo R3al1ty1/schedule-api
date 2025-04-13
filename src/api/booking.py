@@ -102,7 +102,7 @@ async def create_booking(
 @router.put("/bookings/{booking_id}/approve", response_model=booking_schema.Booking)
 async def approve_booking(
     booking_id: int,
-    user_id: int = Depends(get_admin_user),
+    user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     check = await verify_admin(user_id, db)
@@ -128,7 +128,7 @@ async def approve_booking(
 @router.put("/bookings/{booking_id}/reject", response_model=booking_schema.Booking)
 async def reject_booking(
     booking_id: int,
-    user_id: int = Depends(get_admin_user),
+    user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     check = await verify_admin(user_id, db)
@@ -149,6 +149,7 @@ async def reject_booking(
     await db.commit()
     await db.refresh(booking)
     return booking
+
 
 @router.put("/bookings/{booking_id}", response_model=booking_schema.Booking)
 async def update_booking(
