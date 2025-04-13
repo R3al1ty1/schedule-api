@@ -30,10 +30,19 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://web.telegram.org",  # Домен Telegram Web App
+        "*",  # Для тестов можно разрешить все, но потом убери
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Разреши все нужные методы
+    allow_headers=[
+        "user-id",  # Явно разреши твой кастомный заголовок
+        "accept",
+        "content-type",
+        "authorization",
+        "cache-control",
+    ],
 )
 
 
