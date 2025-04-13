@@ -35,15 +35,7 @@ async def get_bookings(
             detail="Необходимо указать user_id в заголовке"
         )
 
-    try:
-        is_admin = await verify_admin(user_id, db)
-        logger.info(f"Результат проверки админа: is_admin={is_admin}")
-    except Exception as e:
-        logger.error(f"Ошибка проверки админа: ${str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Указанный user_id не имеет прав администратора"
-        )
+    is_admin = await verify_admin(user_id, db)
 
     bookings = await get_bookings_db(db=db, is_admin=is_admin, user_id=user_id)
     logger.info(f"Возвращено {len(bookings)} бронирований")
