@@ -1,44 +1,78 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, datetime
+from core.schemas.comment import Comment
 
-# Схема для входящих данных при создании бронирования: поля id, status и user_id не нужны.
 class BookingCreate(BaseModel):
     start_date: datetime
     end_date: datetime
     people_count: int
-    event_theme: str
-    event_description: Optional[str] = None
+    theme: str                    # было event_theme
+    description: Optional[str] = None  # было event_description
+    target_audience: Optional[str] = None
+    name: Optional[str] = None
+    registration: Optional[str] = None
+    logistics: Optional[str] = None
+    type: Optional[str] = None
+    place: Optional[str] = None
+    participants_accomodation: Optional[str] = None
+    experts_count: Optional[int] = None
+    curator_fio: Optional[str] = None
+    curator_position: Optional[str] = None
+    curator_contact: Optional[str] = None
+    other_info: Optional[str] = None
 
     class Config:
         json_encoders = {
             date: lambda v: v.strftime('%Y-%m-%d')
         }
 
-# Схема для обновления бронирования — все поля необязательны
 class BookingUpdate(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     people_count: Optional[int] = None
-    event_theme: Optional[str] = None
-    event_description: Optional[str] = None
+    theme: Optional[str] = None           # было event_theme
+    description: Optional[str] = None     # было event_description
+    target_audience: Optional[str] = None
+    name: Optional[str] = None
+    registration: Optional[str] = None
+    logistics: Optional[str] = None
+    type: Optional[str] = None
+    place: Optional[str] = None
+    participants_accomodation: Optional[str] = None
+    experts_count: Optional[int] = None
+    curator_fio: Optional[str] = None
+    curator_position: Optional[str] = None
+    curator_contact: Optional[str] = None
+    other_info: Optional[str] = None
 
-# Схема для чтения (ответ) с сервера, включает служебные поля
 class Booking(BaseModel):
     id: int
     user_id: int
     start_date: date
     end_date: date
     people_count: int
-    event_theme: str
-    event_description: Optional[str] = None
+    theme: str                    # было event_theme
+    description: Optional[str] = None  # было event_description
     status: str
+    target_audience: Optional[str] = None
+    name: Optional[str] = None
+    registration: Optional[str] = None
+    logistics: Optional[str] = None
+    type: Optional[str] = None
+    place: Optional[str] = None
+    participants_accomodation: Optional[str] = None
+    experts_count: Optional[int] = None
+    curator_fio: Optional[str] = None
+    curator_position: Optional[str] = None
+    curator_contact: Optional[str] = None
+    other_info: Optional[str] = None
+    comments: List[Comment] = []
     
     model_config = {
-        "from_attributes": True  # Аналог orm_mode для Pydantic v2
+        "from_attributes": True
     }
 
-# Если нужна схема для запроса списка бронирований по admin_id
 class BookingListRequest(BaseModel):
     admin_id: Optional[int] = None
 

@@ -12,6 +12,7 @@ from core.db_helper import db_helper
 from core.models.admin import Admin
 from core.models import booking as booking_model
 from dotenv import load_dotenv
+from sqlalchemy.orm import selectinload
 
 
 load_dotenv()
@@ -31,23 +32,16 @@ async def verify_admin(user_id: int, db: AsyncSession) -> bool:
     return True
 
 
-async def check_venue_availability(db: AsyncSession, start_date: datetime.datetime, end_date: datetime.datetime) -> List[booking_model.Booking]:
+async def check_venue_availability(db: AsyncSession, start_date: datetime, end_date: datetime) -> List[booking_model.Booking]:
     """
     Проверяет существующие бронирования на указанный период времени
-    
-    Args:
-        db (AsyncSession): Асинхронная сессия базы данных
-        start_date (datetime): Дата начала бронирования
-        end_date (datetime): Дата окончания бронирования
-        
-    Returns:
-        List[Booking]: Список существующих бронирований, пересекающихся с указанным периодом
     """
-    stmt = select(booking_model.Booking).where(
-        booking_model.Booking.status == "approved",
-        booking_model.Booking.start_date <= end_date,
-        booking_model.Booking.end_date >= start_date,
-    )
+    stmt = select(booking_model.Booking).filter(
+        booking_model.Booking.status == "approved",  # Проверяем только подтвержденные бронирования
+        booking_model.Booking.start_date <= end_date,  # Начало существующего <= конец нового
+        booking_model.Booking.end_date >= start_date,  # Конец существующего >= начало нового
+    ).options(selectinload(booking_model.Booking.comments))  # Загружаем комментарии
+    
     result = await db.execute(stmt)
     existing_bookings = result.scalars().all()
     

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, Text
-
+from sqlalchemy.orm import relationship
 from core.models.models import Base
 
 
@@ -11,6 +11,20 @@ class Booking(Base):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     people_count = Column(Integer, nullable=False)
-    event_theme = Column(String, nullable=False)
-    event_description = Column(Text, nullable=True)
-    status = Column(String, default="pending")
+    theme = Column(Text, nullable=False)  # было event_theme
+    description = Column(Text)            # было event_description
+    status = Column(String(50), default="pending")
+    target_audience = Column(Text)
+    name = Column(Text)
+    registration = Column(String(10))
+    logistics = Column(String(25))
+    type = Column(Text)
+    place = Column(Text)
+    participants_accomodation = Column(String(15))
+    experts_count = Column(Integer)
+    curator_fio = Column(Text)
+    curator_position = Column(String(50))
+    curator_contact = Column(String(70))
+    other_info = Column(Text)
+    
+    comments = relationship("Comment", back_populates="booking", cascade="all, delete-orphan")
