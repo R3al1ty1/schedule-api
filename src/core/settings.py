@@ -8,7 +8,7 @@ from typing import Any
 
 class RunConfig(BaseModel):
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8080
 
 
 class ApiV1Prefix(BaseModel):
