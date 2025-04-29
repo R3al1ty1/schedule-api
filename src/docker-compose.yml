@@ -17,7 +17,7 @@ services:
   db:
     image: postgres:latest
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - schedule_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     env_file:
       - .env
@@ -35,4 +35,4 @@ services:
       start_period: 10s
 
 volumes:
-  postgres_data:
+  schedule_data:
