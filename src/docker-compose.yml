@@ -10,7 +10,7 @@ services:
     env_file:
       - .env
     depends_on:
-      db:
+      schedule-db:
         condition: service_healthy
     restart: always
 
