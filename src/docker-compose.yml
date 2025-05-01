@@ -14,8 +14,9 @@ services:
         condition: service_healthy
     restart: always
 
-  db:
+  schedule-db:
     image: postgres:latest
+    container_name: schedule-db
     volumes:
       - schedule_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
