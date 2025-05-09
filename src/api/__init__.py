@@ -1,11 +1,15 @@
 from fastapi import APIRouter
-from .booking import router as router_api_v1
+from .booking import router as bookings_routers
+from .user import router as user_routers
 
 
 router = APIRouter()
 
 
 router.include_router(
-    router_api_v1,
-    prefix="/v1",
+    bookings_routers,
+)
+
+router.include_router(
+    user_routers,
 )

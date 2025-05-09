@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import List
-import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,26 +15,14 @@ from core.models import comment as comment_model
 from core.schemas import comment as comment_schema
 
 
-router = APIRouter()
+router = APIRouter(tags=["Bookings"])
 
 db = db_helper.session_getter
-
-@router.get("/users/check-admin", response_model=dict)
-async def check_is_admin(
-    user_id: int = Header(...),
-    db: AsyncSession = Depends(db)
-):
-    """
-    Проверяет, является ли пользователь администратором.
-    """
-    is_admin = await verify_admin(user_id, db)
-    return {"is_admin": is_admin}
-
 
 @router.get("/bookings", response_model=booking_schema.BookingListResponse)
 async def get_bookings(
     user_id: int = Header(...),
-    db: AsyncSession = Depends(db)
+    db: AsyncSession = Depends(db),
 ):
     """
     Получение списка бронирований.
