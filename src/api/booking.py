@@ -135,6 +135,28 @@ async def approve_booking(
     
     if booking.status != "pending":
         raise HTTPException(status_code=400, detail="Бронирование уже обработано")
+
+    # Проверяем доступность площадки при одобрении бронирования
+    existing_bookings = await check_venue_availability(db, booking.start_date, booking.end_date)
+    
+    if existing_bookings:
+        total_people = booking.people_count
+        can_share = True
+        
+        for existing in existing_bookings:
+            if existing.theme != booking.theme:
+                can_share = False
+                break
+            total_people += existing.people_count
+            if total_people > 300:  # MAX_CAPACITY
+                can_share = False
+                break
+        
+        if not can_share:
+            raise HTTPException(
+                status_code=400, 
+                detail="Невозможно одобрить бронирование: конфликт с существующими бронированиями"
+            )
     
     booking.status = "approved"
     await db.commit()
