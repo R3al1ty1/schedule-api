@@ -341,7 +341,8 @@ async def get_calendar_data(db: AsyncSession = Depends(db)):
     # Получаем бронирования за указанный период
     stmt = select(booking_model.Booking).where(
         booking_model.Booking.end_date >= start,
-        booking_model.Booking.start_date <= end
+        booking_model.Booking.start_date <= end,
+        booking_model.Booking.status == "approved"  # Добавляем фильтр по статусу
     )
     result = await db.execute(stmt)
     bookings = result.scalars().all()
