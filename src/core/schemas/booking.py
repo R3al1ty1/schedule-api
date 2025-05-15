@@ -2,6 +2,16 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, datetime
 from core.schemas.comment import Comment
+from enum import Enum
+
+class SortField(str, Enum):
+    id = "id"
+    start_date = "start_date"
+    end_date = "end_date"
+
+class SortOrder(str, Enum):
+    asc = "asc"
+    desc = "desc"
 
 class BookingCreate(BaseModel):
     start_date: datetime

@@ -24,12 +24,16 @@ db = db_helper.session_getter
 @router.get("/bookings", response_model=booking_schema.BookingListResponse)
 async def get_bookings(
     user_id: int = Header(...),
+    sort_by: booking_schema.SortField = booking_schema.SortField.id,
+    sort_order: booking_schema.SortOrder = booking_schema.SortOrder.asc,
     db: AsyncSession = Depends(db),
 ):
     """
     Получение списка бронирований.
     - Если передан user_id в заголовке, возвращает бронирования конкретного пользователя
     - Если не передан user_id, возвращает ошибку
+    - Поддерживает сортировку по полям: id, start_date, end_date
+    - Поддерживает порядок сортировки: asc (по возрастанию), desc (по убыванию)
     """
     
     if user_id is None:
@@ -41,7 +45,13 @@ async def get_bookings(
 
     is_admin = await verify_admin(user_id, db)
 
-    bookings = await get_bookings_db(db=db, is_admin=is_admin, user_id=user_id)
+    bookings = await get_bookings_db(
+        db=db,
+        is_admin=is_admin,
+        user_id=user_id,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value
+    )
     return {"result": bookings}
 
 
