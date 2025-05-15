@@ -25,7 +25,7 @@ db = db_helper.session_getter
 async def get_bookings(
     user_id: int = Header(...),
     sort_by: booking_schema.SortField = booking_schema.SortField.id,
-    sort_order: booking_schema.SortOrder = booking_schema.SortOrder.asc,
+    sort_order: booking_schema.SortOrder = booking_schema.SortOrder.desc,
     db: AsyncSession = Depends(db),
 ):
     """
