@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from loguru import logger
 
 from core.db_helper import db_helper
 from core.models import booking as booking_model
@@ -131,7 +132,7 @@ async def create_booking(booking: booking_schema.BookingCreate, user_id: int = H
         f"<b>Контакты куратора:</b> {db_booking.curator_contact or '-'}\n"
         f"<b>Доп. информация:</b> {db_booking.other_info or '-'}"
     )
-
+    logger.info(f"Отправляем уведомление о новой брони: {db_bookings_to_send}")
     await new_booking_notification(
         booking_details=db_bookings_to_send
     )
