@@ -335,7 +335,7 @@ async def get_calendar_data(db: AsyncSession = Depends(db)):
     - 4 месяца вперед от текущей даты
     """
     today = datetime.now().date()
-    start = today - timedelta(days=30)  # месяц назад
+    start = today - timedelta(days=120)  # месяц назад
     end = today + timedelta(days=120)   # 4 месяца вперед
     
     # Получаем бронирования за указанный период
