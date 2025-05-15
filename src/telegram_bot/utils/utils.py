@@ -6,6 +6,7 @@ from aiogram import Bot
 from aiogram.types import BufferedInputFile
 from io import BytesIO
 from telegram_bot.config.config import bot
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 
 load_dotenv()
@@ -51,18 +52,28 @@ async def new_booking_notification(
     booking_details: str
 ) -> None:
     """
-    Отправляет уведомление о новой брони пользователю в Telegram.
+    Отправляет уведомление о новой брони пользователю в Telegram с инлайн-кнопкой на мини-приложение.
 
     Args:
-        user_id: ID пользователя в Telegram
         booking_details: Подробности бронирования
     """
     message = (
         "🔔 <b>Новая заявка на бронирование!</b>\n\n"
         f"<b>Детали:</b>\n{booking_details}"
     )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[
+            InlineKeyboardButton(
+                text="Открыть в приложении🚀",
+                url=f"https://t.me/tavrida_schedule_bot/tavrida_schedule"
+            )
+        ]]
+    )
+
     await bot.send_message(
         chat_id=os.getenv("NOTIFICATIONS_CHAT_ID"),
         text=message,
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=keyboard
     )
