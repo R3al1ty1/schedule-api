@@ -2,11 +2,10 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Устанавливаем aiogram
-RUN pip install --no-cache-dir aiogram
+COPY requirements.txt .
 
-# Копируем код и фото
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# Запускаем бота
 CMD ["python", "main.py"]
