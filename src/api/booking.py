@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from loguru import logger
 
+from core.consts import MAX_CAPACITY
 from core.db_helper import db_helper
 from core.models import booking as booking_model
 from core.schemas import booking as booking_schema
@@ -60,7 +61,7 @@ async def create_booking(booking: booking_schema.BookingCreate, user_id: int = H
     if booking.start_date > booking.end_date:
         raise HTTPException(status_code=400, detail="Дата начала должна быть раньше даты окончания")
     
-    MAX_CAPACITY = 300
+    
     
     if booking.people_count > MAX_CAPACITY:
         raise HTTPException(
@@ -187,7 +188,7 @@ async def approve_booking(
                 can_share = False
                 break
             total_people += existing.people_count
-            if total_people > 300:  # MAX_CAPACITY
+            if total_people > MAX_CAPACITY:  # MAX_CAPACITY
                 can_share = False
                 break
         
@@ -264,7 +265,6 @@ async def update_booking(
         booking.end_date = booking_update.end_date
     
     if booking_update.people_count:
-        MAX_CAPACITY = 300
         if booking_update.people_count > MAX_CAPACITY:
             raise HTTPException(
                 status_code=400, 
