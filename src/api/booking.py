@@ -94,6 +94,7 @@ async def create_booking(booking: booking_schema.BookingCreate, user_id: int = H
         start_date=booking.start_date,
         end_date=booking.end_date,
         people_count=booking.people_count,
+        people_count_overall=booking.people_count_overall,
         theme=booking.theme,
         description=booking.description,
         target_audience=booking.target_audience,
@@ -129,7 +130,8 @@ async def create_booking(booking: booking_schema.BookingCreate, user_id: int = H
         f"<b>Тема:</b> {db_booking.theme}\n"
         f"<b>Описание:</b> {db_booking.description or '-'}\n"
         f"<b>Статус:</b> {db_booking.status}\n"
-        f"<b>Количество человек:</b> {db_booking.people_count}\n"
+        f"<b>Количество участников с проживанием:</b> {db_booking.people_count}\n"
+        f"<b>Количество участников и зрителей всего:</b> {db_booking.people_count_overall}\n"
         f"<b>Целевая аудитория:</b> {db_booking.target_audience or '-'}\n"
         f"<b>Тип регистрации:</b> {db_booking.registration or '-'}\n"
         f"<b>Логистика участников:</b> {db_booking.logistics or '-'}\n"

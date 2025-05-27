@@ -11,6 +11,7 @@ class Booking(Base):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     people_count = Column(Integer, nullable=False)
+    people_count_overall = Column(Integer, nullable=False)
     theme = Column(Text, nullable=False)  # было event_theme
     description = Column(Text)            # было event_description
     status = Column(String(50), default="pending")

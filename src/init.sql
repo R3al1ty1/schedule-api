@@ -64,6 +64,7 @@ CREATE TABLE public.bookings (
     start_date date NOT NULL,
     end_date date NOT NULL,
     people_count integer NOT NULL,
+    people_count_overall integer
     theme text NOT NULL,
     description text,
     status character varying(50) DEFAULT 'pending'::character varying,
@@ -175,10 +176,10 @@ COPY public.admins (id, user_id) FROM stdin;
 -- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.bookings (id, user_id, start_date, end_date, people_count, theme, description, status, target_audience, name, registration, logistics, type, place, participants_accomodation, experts_count, curator_fio, curator_position, curator_contact, other_info) FROM stdin;
-1	111111	2025-04-10	2025-04-12	80	Конференция по IT	Ежегодная конференция разработчиков	approved	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-2	222222	2025-04-15	2025-04-17	150	Мастер-класс	Мастер-класс по программированию	pending	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
-3	333333	2025-04-20	2025-04-22	200	Выставка	Выставка технологических новинок	approved	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+COPY public.bookings (id, user_id, start_date, end_date, people_count, theme, description, status, target_audience, name, registration, logistics, type, place, participants_accomodation, experts_count, curator_fio, curator_position, curator_contact, other_info, people_count_overall) FROM stdin;
+1	111111	2025-04-10	2025-04-12	80	Конференция по IT	Ежегодная конференция разработчиков	approved	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+2	222222	2025-04-15	2025-04-17	150	Мастер-класс	Мастер-класс по программированию	pending	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+3	333333	2025-04-20	2025-04-22	200	Выставка	Выставка технологических новинок	approved	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 \.
 
 

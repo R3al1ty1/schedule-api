@@ -17,6 +17,7 @@ class BookingCreate(BaseModel):
     start_date: datetime
     end_date: datetime
     people_count: int
+    people_count_overall: int
     theme: str                    # было event_theme
     description: Optional[str] = None  # было event_description
     target_audience: Optional[str] = None
@@ -41,6 +42,7 @@ class BookingUpdate(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     people_count: Optional[int] = None
+    people_count_overall: Optional[int] = None
     theme: Optional[str] = None           # было event_theme
     description: Optional[str] = None     # было event_description
     target_audience: Optional[str] = None
@@ -62,6 +64,7 @@ class Booking(BaseModel):
     start_date: date
     end_date: date
     people_count: int
+    people_count_overall: int
     theme: str                    # было event_theme
     description: Optional[str] = None  # было event_description
     status: str
