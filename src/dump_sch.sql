@@ -64,7 +64,6 @@ CREATE TABLE public.bookings (
     start_date date NOT NULL,
     end_date date NOT NULL,
     people_count integer NOT NULL,
-    people_count_overall integer,
     theme text NOT NULL,
     description text,
     status character varying(50) DEFAULT 'pending'::character varying,
@@ -79,7 +78,8 @@ CREATE TABLE public.bookings (
     curator_fio text,
     curator_position character varying(50),
     curator_contact character varying(100),
-    other_info text
+    other_info text,
+    people_count_overall integer
 );
 
 
