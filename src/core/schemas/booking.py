@@ -64,7 +64,7 @@ class Booking(BaseModel):
     start_date: date
     end_date: date
     people_count: int
-    people_count_overall: int
+    people_count_overall: Optional[int] = None
     theme: str                    # было event_theme
     description: Optional[str] = None  # было event_description
     status: str
