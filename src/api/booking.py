@@ -1,26 +1,20 @@
-from datetime import datetime, timedelta
-from collections import defaultdict
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Header
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 from loguru import logger
 
 from core.consts import MAX_CAPACITY
 from core.db_helper import db_helper
-from core.models import booking as booking_model
 from core.schemas import booking as booking_schema
-from core.utils import check_venue_availability, verify_admin
-from crud.booking import get_bookings_db
-from core.models import comment as comment_model
+from core.utils import check_capacity, get_bookings_for_period, verify_admin
+from crud.booking import change_booking_status, create_booking_db, create_comment_db, delete_booking_db, get_booking_by_id_db, get_bookings_db, get_calendar_data_db, update_booking_db
 from core.schemas import comment as comment_schema
-from telegram_bot.utils.utils import new_booking_notification
 
 
 router = APIRouter(tags=["Bookings"])
 
 db = db_helper.session_getter
+
 
 @router.get("/bookings", response_model=booking_schema.BookingListResponse)
 async def get_bookings(
@@ -53,15 +47,22 @@ async def get_bookings(
         sort_by=sort_by.value,
         sort_order=sort_order.value
     )
+
     return {"result": bookings}
 
 
 @router.post("/bookings", response_model=booking_schema.Booking, status_code=status.HTTP_201_CREATED)
 async def create_booking(booking: booking_schema.BookingCreate, user_id: int = Header(...), db: AsyncSession = Depends(db)):
+    """
+    Функция создания нового бронирования.
+    Проверяет:
+    - Даты начала и окончания бронирования
+    - Количество людей не превышает максимальную вместимость
+    - Доступность площадки на выбранные даты
+    - Если бронирование успешно, сохраняет его в базе данных и отправляет уведомление
+    """
     if booking.start_date > booking.end_date:
         raise HTTPException(status_code=400, detail="Дата начала должна быть раньше даты окончания")
-    
-    
     
     if booking.people_count > MAX_CAPACITY:
         raise HTTPException(
@@ -69,87 +70,23 @@ async def create_booking(booking: booking_schema.BookingCreate, user_id: int = H
             detail=f"Площадка вмещает максимум {MAX_CAPACITY} человек"
         )
     
-    existing_bookings = await check_venue_availability(db, booking.start_date, booking.end_date)
+    existing_bookings = await get_bookings_for_period(db, booking.start_date, booking.end_date)
     
     if existing_bookings:
-        total_people = booking.people_count
-        can_share = True
-        
-        for existing in existing_bookings:
-            if existing.theme != booking.theme:
-                can_share = False
-                break
-            total_people += existing.people_count
-            if total_people > MAX_CAPACITY:
-                can_share = False
-                break
+        can_share = await check_capacity(booking, existing_bookings)
         
         if not can_share:
             raise HTTPException(
                 status_code=400, 
                 detail="Площадка уже забронирована на выбранные даты"
             )
-    
-    db_booking = booking_model.Booking(
-        user_id=user_id,
-        start_date=booking.start_date,
-        end_date=booking.end_date,
-        people_count=booking.people_count,
-        people_count_overall=booking.people_count_overall,
-        theme=booking.theme,
-        description=booking.description,
-        target_audience=booking.target_audience,
-        name=booking.name,
-        registration=booking.registration,
-        logistics=booking.logistics,
-        type=booking.type,
-        place=booking.place,
-        participants_accomodation=booking.participants_accomodation,
-        experts_count=booking.experts_count,
-        curator_fio=booking.curator_fio,
-        curator_position=booking.curator_position,
-        curator_contact=booking.curator_contact,
-        other_info=booking.other_info,
-        status="pending"
-    )
-    
-    db.add(db_booking)
-    await db.commit()
-    await db.refresh(db_booking)
-    
-    # Перезагружаем бронирование с комментариями
-    stmt = select(booking_model.Booking).where(
-        booking_model.Booking.id == db_booking.id
-    ).options(selectinload(booking_model.Booking.comments))
-    result = await db.execute(stmt)
-    db_booking = result.scalars().first()
 
-    db_bookings_to_send = (
-        f"\n<b>Номер:</b> {db_booking.id}\n"
-        f"<b>Даты:</b> {db_booking.start_date.strftime('%d.%m.%Y')} — {db_booking.end_date.strftime('%d.%m.%Y')}\n"
-        f"<b>Название:</b> {db_booking.name}\n"
-        f"<b>Тема:</b> {db_booking.theme}\n"
-        f"<b>Описание:</b> {db_booking.description or '-'}\n"
-        f"<b>Статус:</b> {db_booking.status}\n"
-        f"<b>Количество участников с проживанием:</b> {db_booking.people_count}\n"
-        f"<b>Количество участников и зрителей всего:</b> {db_booking.people_count_overall}\n"
-        f"<b>Целевая аудитория:</b> {db_booking.target_audience or '-'}\n"
-        f"<b>Тип регистрации:</b> {db_booking.registration or '-'}\n"
-        f"<b>Логистика участников:</b> {db_booking.logistics or '-'}\n"
-        f"<b>Тип программы:</b> {db_booking.type or '-'}\n"
-        f"<b>Место:</b> {db_booking.place or '-'}\n"
-        f"<b>Размещение участников:</b> {db_booking.participants_accomodation or '-'}\n"
-        f"<b>Количество экспертов:</b> {db_booking.experts_count or '-'}\n"
-        f"<b>Куратор:</b> {db_booking.curator_fio or '-'}\n"
-        f"<b>Должность куратора:</b> {db_booking.curator_position or '-'}\n"
-        f"<b>Контакты куратора:</b> {db_booking.curator_contact or '-'}\n"
-        f"<b>Доп. информация:</b> {db_booking.other_info or '-'}"
+    db_booking = await create_booking_db(
+        db=db,
+        booking=booking,
+        user_id=user_id
     )
 
-    await new_booking_notification(
-        booking_details=db_bookings_to_send
-    )
-    
     return db_booking
 
 
@@ -159,48 +96,47 @@ async def approve_booking(
     user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
+    """
+    Функция одобрения бронирования.
+    Проверяет:
+    - Является ли пользователь администратором
+    - Существует ли бронирование с указанным ID
+    - Статус бронирования должен быть "pending"
+    - Проверяет доступность площадки при одобрении бронирования
+    """
     check = await verify_admin(user_id, db)
     if not check:
         raise HTTPException(status_code=403, detail="Пользователь не является админом")
 
-    stmt = select(booking_model.Booking).where(
-        booking_model.Booking.id == booking_id
-    ).options(selectinload(booking_model.Booking.comments))
+    booking = await get_booking_by_id_db(
+        db=db,
+        booking_id=booking_id
+    )
     
-    result = await db.execute(stmt)
-    booking = result.scalars().first()
-    
-    if booking is None:
+    if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
     
     if booking.status != "pending":
         raise HTTPException(status_code=400, detail="Бронирование уже обработано")
 
     # Проверяем доступность площадки при одобрении бронирования
-    existing_bookings = await check_venue_availability(db, booking.start_date, booking.end_date)
+    existing_bookings = await get_bookings_for_period(db, booking.start_date, booking.end_date)
     
     if existing_bookings:
-        total_people = booking.people_count
-        can_share = True
-        
-        for existing in existing_bookings:
-            if existing.theme != booking.theme:
-                can_share = False
-                break
-            total_people += existing.people_count
-            if total_people > MAX_CAPACITY:  # MAX_CAPACITY
-                can_share = False
-                break
+        can_share = await check_capacity(booking, existing_bookings)
         
         if not can_share:
             raise HTTPException(
                 status_code=400, 
                 detail="Невозможно одобрить бронирование: конфликт с существующими бронированиями"
             )
-    
-    booking.status = "approved"
-    await db.commit()
-    await db.refresh(booking)
+
+    booking = await change_booking_status(
+        db=db,
+        booking=booking,
+        status="approved"
+    )    
+
     return booking
 
 
@@ -210,26 +146,44 @@ async def reject_booking(
     user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
+    """
+    Функция отклонения бронирования.
+    Проверяет:
+    - Является ли пользователь администратором
+    """
     check = await verify_admin(user_id, db)
     if not check:
         raise HTTPException(status_code=403, detail="Пользователь не является админом")
+
+    booking = await get_booking_by_id_db(
+        db=db,
+        booking_id=booking_id
+    )
     
-    stmt = select(booking_model.Booking).where(
-        booking_model.Booking.id == booking_id
-    ).options(selectinload(booking_model.Booking.comments))
-    
-    result = await db.execute(stmt)
-    booking = result.scalars().first()
-    
-    if booking is None:
+    if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
     
     if booking.status != "pending":
         raise HTTPException(status_code=400, detail="Бронирование уже обработано")
+
+    # Проверяем доступность площадки при одобрении бронирования
+    existing_bookings = await get_bookings_for_period(db, booking.start_date, booking.end_date)
     
-    booking.status = "rejected"
-    await db.commit()
-    await db.refresh(booking)
+    if existing_bookings:
+        can_share = await check_capacity(booking, existing_bookings)
+        
+        if not can_share:
+            raise HTTPException(
+                status_code=400, 
+                detail="Невозможно одобрить бронирование: конфликт с существующими бронированиями"
+            )
+
+    booking = await change_booking_status(
+        db=db,
+        booking=booking,
+        status="rejected"
+    )    
+
     return booking
 
 
@@ -240,17 +194,19 @@ async def update_booking(
     user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
-    stmt = select(booking_model.Booking).where(
-        booking_model.Booking.id == booking_id
-    ).options(selectinload(booking_model.Booking.comments))
+    """
+    Функция обновления бронирования.
+    """
+    booking = await get_booking_by_id_db(
+        db=db,
+        booking_id=booking_id
+    )
     
-    result = await db.execute(stmt)
-    booking = result.scalars().first()
-    
-    if booking is None:
+    if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
     
     is_admin = await verify_admin(user_id, db)
+
     if not is_admin and booking.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -271,73 +227,24 @@ async def update_booking(
                 detail=f"Площадка вмещает максимум {MAX_CAPACITY} человек"
             )
         booking.people_count = booking_update.people_count
-    
-    if booking_update.theme:
-        booking.theme = booking_update.theme
-    
-    if booking_update.description:
-        booking.description = booking_update.description
-        
-    if booking_update.target_audience:
-        booking.target_audience = booking_update.target_audience
-        
-    if booking_update.name:
-        booking.name = booking_update.name
-        
-    if booking_update.registration:
-        booking.registration = booking_update.registration
-        
-    if booking_update.logistics:
-        booking.logistics = booking_update.logistics
-        
-    if booking_update.type:
-        booking.type = booking_update.type
-        
-    if booking_update.place:
-        booking.place = booking_update.place
-        
-    if booking_update.participants_accomodation:
-        booking.participants_accomodation = booking_update.participants_accomodation
-        
-    if booking_update.experts_count:
-        booking.experts_count = booking_update.experts_count
-        
-    if booking_update.curator_fio:
-        booking.curator_fio = booking_update.curator_fio
-        
-    if booking_update.curator_position:
-        booking.curator_position = booking_update.curator_position
-        
-    if booking_update.curator_contact:
-        booking.curator_contact = booking_update.curator_contact
-        
-    if booking_update.other_info:
-        booking.other_info = booking_update.other_info
-    
-    existing_bookings = await check_venue_availability(db, booking.start_date, booking.end_date)
+
+    existing_bookings = await get_bookings_for_period(db, booking.start_date, booking.end_date)
     
     if existing_bookings:
-        total_people = booking.people_count
-        can_share = True
-        
-        for existing in existing_bookings:
-            if existing.id != booking.id:
-                if existing.theme != booking.theme:
-                    can_share = False
-                    break
-                total_people += existing.people_count
-                if total_people > MAX_CAPACITY:
-                    can_share = False
-                    break
+        can_share = await check_capacity(booking, existing_bookings)
         
         if not can_share:
             raise HTTPException(
                 status_code=400, 
-                detail="После изменений возникает конфликт с существующими бронированиями"
+                detail="Невозможно одобрить бронирование: конфликт с существующими бронированиями"
             )
     
-    await db.commit()
-    await db.refresh(booking)
+    booking = await update_booking_db(
+        db=db,
+        booking=booking,
+        booking_update=booking_update
+    )
+
     return booking
 
 
@@ -347,23 +254,35 @@ async def delete_booking(
     user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
-    stmt = select(booking_model.Booking).where(booking_model.Booking.id == booking_id)
-    result = await db.execute(stmt)
-    booking = result.scalars().first()
+    """
+    Функция удаления бронирования.
+    Проверяет:
+    - Является ли пользователь администратором
+    - Существует ли бронирование с указанным ID
+    - Если бронирование принадлежит пользователю, который пытается его удалить
+    """
+    booking = await get_booking_by_id_db(
+        db=db,
+        booking_id=booking_id
+    )
     
-    if booking is None:
+    if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
 
     is_admin = await verify_admin(user_id, db)
+
     if not is_admin and booking.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Нет прав на удаление этого бронирования"
         )
     
-    await db.delete(booking)
-    await db.commit()
-    return None
+    await delete_booking_db(
+        db=db,
+        booking=booking
+    )
+
+    return
 
 
 @router.get("/bookings/calendar", response_model=List[booking_schema.CalendarDay])
@@ -373,31 +292,7 @@ async def get_calendar_data(db: AsyncSession = Depends(db)):
     - 1 месяц назад от текущей даты
     - 4 месяца вперед от текущей даты
     """
-    today = datetime.now().date()
-    start = today - timedelta(days=120)  # месяц назад
-    end = today + timedelta(days=120)   # 4 месяца вперед
-    
-    # Получаем бронирования за указанный период
-    stmt = select(booking_model.Booking).where(
-        booking_model.Booking.end_date >= start,
-        booking_model.Booking.start_date <= end,
-        booking_model.Booking.status == "approved"  # Добавляем фильтр по статусу
-    )
-    result = await db.execute(stmt)
-    bookings = result.scalars().all()
-
-    calendar_data = defaultdict(lambda: {"total_people": 0, "themes": set()})
-    
-    for booking in bookings:
-        current_date = max(booking.start_date, start)
-        last_date = min(booking.end_date, end)
-        
-        delta = (last_date - current_date).days + 1
-        
-        for i in range(delta):
-            date = current_date + timedelta(days=i)
-            calendar_data[date.isoformat()]["total_people"] += booking.people_count
-            calendar_data[date.isoformat()]["themes"].add(booking.theme)
+    calendar_data = await get_calendar_data_db(db)
 
     return [
         {
@@ -411,37 +306,31 @@ async def get_calendar_data(db: AsyncSession = Depends(db)):
 
 @router.post("/bookings/{booking_id}/comments", response_model=comment_schema.Comment)
 async def add_comment(
-    booking_id: int,
-    comment: comment_schema.CommentCreate,
+    comment: comment_schema.Comment,
     user_id: int = Header(...),
     db: AsyncSession = Depends(db)
 ):
     """Добавление комментария к бронированию"""
-    # Загружаем бронирование с комментариями
-    stmt = select(booking_model.Booking).where(
-        booking_model.Booking.id == booking_id
-    ).options(selectinload(booking_model.Booking.comments))
+    booking = await get_booking_by_id_db(
+        db=db,
+        booking_id=comment.booking_id
+    )
     
-    result = await db.execute(stmt)
-    booking = result.scalars().first()
-    
-    if booking is None:
+    if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
 
     is_admin = await verify_admin(user_id, db)
+
     if not is_admin and booking.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Нет прав на добавление комментария"
         )
-    
-    # Создаем комментарий
-    db_comment = comment_model.Comment(
-        comment=comment.comment,
-        booking_id=booking_id
+
+    db_comment = await create_comment_db(
+        db=db,
+        comment=comment,
+        booking_id=comment.booking_id
     )
 
-    db.add(db_comment)
-    await db.commit()
-    await db.refresh(db_comment)
     return db_comment

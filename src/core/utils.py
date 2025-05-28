@@ -8,6 +8,7 @@ from urllib.parse import unquote
 from fastapi import Depends, HTTPException,  Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from core.consts import MAX_CAPACITY
 from core.db_helper import db_helper
 from core.models.admin import Admin
 from core.models import booking as booking_model
@@ -32,7 +33,11 @@ async def verify_admin(user_id: int, db: AsyncSession) -> bool:
     return True
 
 
-async def check_venue_availability(db: AsyncSession, start_date: datetime, end_date: datetime) -> List[booking_model.Booking]:
+async def get_bookings_for_period(
+    db: AsyncSession,
+    start_date: datetime,
+    end_date: datetime
+) -> List[booking_model.Booking]:
     """
     Проверяет существующие бронирования на указанный период времени
     """
@@ -47,7 +52,11 @@ async def check_venue_availability(db: AsyncSession, start_date: datetime, end_d
     
     return existing_bookings
 
+
 def verify_telegram_auth(init_data: str = Header(...)):
+    """
+    Проверяет подпись initData, полученную от Telegram Web App.
+    """
     BOT_TOKEN = os.getenv("BOT_TOKEN")
     secret_key = hashlib.sha256(BOT_TOKEN.encode()).digest()
 
@@ -66,7 +75,35 @@ def verify_telegram_auth(init_data: str = Header(...)):
     return user_id
 
 
-async def get_admin_user(user_id: int = Depends(verify_telegram_auth), db: AsyncSession = Depends(db)):
+async def check_capacity(
+    booking: booking_model.Booking,
+    existing_bookings: List
+) -> bool:
+    """
+    Проверяет, можно ли совместить бронирование с существующими бронированиями.
+    """
+    total_people = booking.people_count
+    can_share = True
+    
+    for existing in existing_bookings:
+        if existing.theme != booking.theme:
+            can_share = False
+            break
+        total_people += existing.people_count
+        if total_people > MAX_CAPACITY:
+            can_share = False
+            break
+
+    return can_share
+
+
+async def get_admin_user(
+    user_id: int = Depends(verify_telegram_auth),
+    db: AsyncSession = Depends(db)
+):
+    """
+    Проверяет, является ли пользователь администратором.
+    """
     is_admin = await verify_admin(user_id, db)
     if not is_admin:
         raise HTTPException(status_code=403, detail="Нет прав администратора")
