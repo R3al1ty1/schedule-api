@@ -127,7 +127,8 @@ async def change_booking_status(
         )
 
         await new_booking_notification(
-            booking_details=db_booking_to_send
+            booking_details=db_booking_to_send,
+            status=status
         )
 
     return booking
