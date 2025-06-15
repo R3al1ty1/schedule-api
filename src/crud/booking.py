@@ -87,7 +87,8 @@ async def create_booking_db(
 async def change_booking_status(
     db: AsyncSession,
     booking: booking_model.Booking,
-    status: str
+    status: str,
+    prev_status: Optional[str] = None
 ):
     """
     Меняет статус бронирования в базе данных.
@@ -96,7 +97,13 @@ async def change_booking_status(
     await db.commit()
     await db.refresh(booking)
 
-    if status == "approved":
+    if (
+        status == "approved"
+        or (
+            status == "rejected"
+            and prev_status == "approved"
+        )
+    ):
         db_booking_to_send = (
             f"\n<b>Номер:</b> {booking.id}\n"
             f"<b>Даты:</b> {booking.start_date.strftime('%d.%m.%Y')} — {booking.end_date.strftime('%d.%m.%Y')}\n"

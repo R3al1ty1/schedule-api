@@ -163,26 +163,15 @@ async def reject_booking(
     if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
     
-    if booking.status != "pending":
+    if booking.status not in ("pending", "approved"):
         raise HTTPException(status_code=400, detail="Бронирование уже обработано")
-
-    # Проверяем доступность площадки при одобрении бронирования
-    existing_bookings = await get_bookings_for_period(db, booking.start_date, booking.end_date)
-    
-    if existing_bookings:
-        can_share = await check_capacity(booking, existing_bookings)
-        
-        if not can_share:
-            raise HTTPException(
-                status_code=400, 
-                detail="Невозможно одобрить бронирование: конфликт с существующими бронированиями"
-            )
 
     booking = await change_booking_status(
         db=db,
         booking=booking,
-        status="rejected"
-    )    
+        status="rejected",
+        prev_status=booking.status
+    )
 
     return booking
 
