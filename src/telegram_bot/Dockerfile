@@ -2,8 +2,7 @@ FROM python:alpine
 
 WORKDIR /app
 
-# Устанавливаем необходимые SSL сертификаты
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apk update && apk add --no-cache ca-certificates
 
 COPY requirements.txt .
 
