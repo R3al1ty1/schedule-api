@@ -49,7 +49,8 @@ async def send_excel_file(
     )
 
 async def new_booking_notification(
-    booking_details: str
+    booking_details: str,
+    status: str = "approved"
 ) -> None:
     """
     Отправляет уведомление о новой брони пользователю в Telegram с инлайн-кнопкой на мини-приложение.
@@ -57,10 +58,17 @@ async def new_booking_notification(
     Args:
         booking_details: Подробности бронирования
     """
-    message = (
-        "🔔 <b>Новая заявка на бронирование!</b>\n\n"
-        f"<b>Детали:</b>\n{booking_details}"
-    )
+    if status == "approved":
+        message = (
+            "🔔 <b>Новая заявка на бронирование!</b>\n\n"
+            f"<b>Детали:</b>\n{booking_details}"
+        )
+
+    elif status == "rejected":
+        message = (
+            "❌ <b>Заявка на бронирование отклонена!</b>\n\n"
+            f"<b>Детали:</b>\n{booking_details}"
+        )
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[[
