@@ -2,6 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+RUN apk update && apk add --no-cache ca-certificates
+
 RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml .
