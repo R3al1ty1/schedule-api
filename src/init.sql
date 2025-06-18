@@ -26,7 +26,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.admins (
     id integer NOT NULL,
-    user_id integer NOT NULL
+    user_id bigint NOT NULL
 );
 
 
@@ -60,7 +60,7 @@ ALTER SEQUENCE public.admins_id_seq OWNED BY public.admins.id;
 
 CREATE TABLE public.bookings (
     id integer NOT NULL,
-    user_id integer NOT NULL,
+    user_id bigint NOT NULL,
     start_date date NOT NULL,
     end_date date NOT NULL,
     people_count integer NOT NULL,
