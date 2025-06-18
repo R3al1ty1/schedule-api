@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Text
+from sqlalchemy import Column, Integer, BigInteger, String, Date, Text
 from sqlalchemy.orm import relationship
 from core.models.models import Base
 
@@ -7,7 +7,7 @@ class Booking(Base):
     __tablename__ = "bookings"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, index=True)
+    user_id = Column(BigInteger, index=True)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     people_count = Column(Integer, nullable=False)

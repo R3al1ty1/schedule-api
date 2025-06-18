@@ -9,6 +9,7 @@ from core.models import booking as booking_model
 from core.schemas import booking as booking_schema
 from core.models import comment as comment_model
 from telegram_bot.utils.utils import new_booking_notification
+from loguru import logger
 
 
 async def get_bookings_db(
@@ -126,10 +127,13 @@ async def change_booking_status(
             f"<b>Доп. информация:</b> {booking.other_info or '-'}"
         )
 
-        await new_booking_notification(
-            booking_details=db_booking_to_send,
-            status=status
-        )
+        try:
+            await new_booking_notification(
+                booking_details=db_booking_to_send,
+                status=status
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при отправке уведомления о бронировании: {e}")
 
     return booking
 
