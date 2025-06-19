@@ -9,6 +9,7 @@ from core.schemas import booking as booking_schema
 from core.utils import check_capacity, get_bookings_for_period, verify_admin
 from crud.booking import change_booking_status, create_booking_db, create_comment_db, delete_booking_db, get_booking_by_id_db, get_bookings_db, get_calendar_data_db, update_booking_db
 from core.schemas import comment as comment_schema
+from telegram_bot.utils.utils import new_booking_notification
 
 
 router = APIRouter(tags=["Bookings"])
@@ -85,6 +86,34 @@ async def create_booking(booking: booking_schema.BookingCreate, user_id: int = H
         db=db,
         booking=booking,
         user_id=user_id
+    )
+
+    booking_details = (
+        f"\n<b>Номер:</b> {db_booking.id}\n"
+        f"<b>Даты:</b> {db_booking.start_date.strftime('%d.%m.%Y')} — {db_booking.end_date.strftime('%d.%m.%Y')}\n"
+        f"<b>Название:</b> {db_booking.name}\n"
+        f"<b>Тема:</b> {db_booking.theme}\n"
+        f"<b>Описание:</b> {db_booking.description or '-'}\n"
+        f"<b>Статус:</b> {db_booking.status}\n"
+        f"<b>Количество участников с проживанием:</b> {db_booking.people_count}\n"
+        f"<b>Количество участников и зрителей всего:</b> {db_booking.people_count_overall}\n"
+        f"<b>Целевая аудитория:</b> {db_booking.target_audience or '-'}\n"
+        f"<b>Тип регистрации:</b> {db_booking.registration or '-'}\n"
+        f"<b>Логистика участников:</b> {db_booking.logistics or '-'}\n"
+        f"<b>Тип программы:</b> {db_booking.type or '-'}\n"
+        f"<b>Место:</b> {db_booking.place or '-'}\n"
+        f"<b>Размещение участников:</b> {db_booking.participants_accomodation or '-'}\n"
+        f"<b>Количество экспертов:</b> {db_booking.experts_count or '-'}\n"
+        f"<b>Куратор:</b> {db_booking.curator_fio or '-'}\n"
+        f"<b>Должность куратора:</b> {db_booking.curator_position or '-'}\n"
+        f"<b>Контакты куратора:</b> {db_booking.curator_contact or '-'}\n"
+        f"<b>Доп. информация:</b> {db_booking.other_info or '-'}"
+    )
+
+    await new_booking_notification(
+        booking_details=booking_details,
+        status=db_booking.status,
+        db=db
     )
 
     return db_booking
