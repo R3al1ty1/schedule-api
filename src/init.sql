@@ -74,11 +74,11 @@ CREATE TABLE public.bookings (
     logistics character varying(35),
     type text,
     place text,
-    participants_accomodation character varying(150),
+    participants_accomodation text,
     experts_count integer,
     curator_fio text,
-    curator_position character varying(50),
-    curator_contact character varying(100),
+    curator_position text,
+    curator_contact text,
     other_info text
 );
 
