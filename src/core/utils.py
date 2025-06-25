@@ -86,9 +86,6 @@ async def check_capacity(
     can_share = True
     
     for existing in existing_bookings:
-        if existing.theme != booking.theme:
-            can_share = False
-            break
         total_people += existing.people_count
         if total_people > MAX_CAPACITY:
             can_share = False
