@@ -47,7 +47,7 @@ CREATE TABLE public.bookings (
     target_audience text,
     name text,
     registration character varying(10),
-    logistics character varying(35),
+    logistics character varying(40),
     type text,
     place text,
     participants_accomodation text,

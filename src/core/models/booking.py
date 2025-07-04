@@ -18,7 +18,7 @@ class Booking(Base):
     target_audience = Column(Text)
     name = Column(Text)
     registration = Column(String(10))
-    logistics = Column(String(25))
+    logistics = Column(String(40))
     type = Column(Text)
     place = Column(Text)
     participants_accomodation = Column(Text)
