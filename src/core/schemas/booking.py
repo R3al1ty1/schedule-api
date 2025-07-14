@@ -97,4 +97,4 @@ class BookingListResponse(BaseModel):
 class CalendarDay(BaseModel):
     date: str
     total_people: int
-    themes: List[str]
+    names: List[str]
