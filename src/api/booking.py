@@ -316,7 +316,7 @@ async def get_calendar_data(db: AsyncSession = Depends(db)):
         {
             "date": date,
             "total_people": data["total_people"],
-            "themes": list(data["themes"])
+            "names": list(data["names"])
         }
         for date, data in sorted(calendar_data.items())
     ]

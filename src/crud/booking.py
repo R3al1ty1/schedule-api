@@ -240,7 +240,7 @@ async def get_calendar_data_db(db: AsyncSession) -> dict:
     result = await db.execute(stmt)
     bookings = result.scalars().all()
 
-    calendar_data = defaultdict(lambda: {"total_people": 0, "themes": set()})
+    calendar_data = defaultdict(lambda: {"total_people": 0, "names": set()})
     
     for booking in bookings:
         current_date = max(booking.start_date, start)
@@ -251,7 +251,7 @@ async def get_calendar_data_db(db: AsyncSession) -> dict:
         for i in range(delta):
             date = current_date + timedelta(days=i)
             calendar_data[date.isoformat()]["total_people"] += booking.people_count
-            calendar_data[date.isoformat()]["themes"].add(booking.theme)
+            calendar_data[date.isoformat()]["names"].add(booking.name)
     
     return calendar_data
 
