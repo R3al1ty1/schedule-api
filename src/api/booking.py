@@ -329,6 +329,7 @@ async def add_comment(
     db: AsyncSession = Depends(db)
 ):
     """Добавление комментария к бронированию"""
+    logger.info(f"Received new comment: {comment}")
     booking = await get_booking_by_id_db(
         db=db,
         booking_id=comment.booking_id
