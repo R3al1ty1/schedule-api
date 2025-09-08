@@ -6,7 +6,5 @@ class CommentBase(BaseModel):
 
 
 class Comment(CommentBase):
-    id: int
-    
     class Config:
         from_attributes = True
