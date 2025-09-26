@@ -14,7 +14,7 @@ keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(
             text="Открыть приложение 🚀",
-            web_app=WebAppInfo(url="https://schedule-front-snowy.vercel.app/")
+            web_app=WebAppInfo(url="https://schedule-front-eight.vercel.app/")
         )]
     ]
 )
