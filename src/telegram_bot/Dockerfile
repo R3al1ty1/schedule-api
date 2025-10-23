@@ -2,8 +2,6 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache ca-certificates
-
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt
