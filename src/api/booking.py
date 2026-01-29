@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
-from core.consts import MAX_CAPACITY
+from core.consts import MAX_CAPACITY, PLACES_WITH_CAPACITY_CHECK
 from core.db_helper import db_helper
 from core.schemas import booking as booking_schema
 from core.utils import check_capacity, get_bookings_for_period, verify_admin
@@ -64,10 +64,10 @@ async def create_booking(booking: booking_schema.BookingCreate, user_id: int = H
     """
     if booking.start_date > booking.end_date:
         raise HTTPException(status_code=400, detail="Дата начала должна быть раньше даты окончания")
-    
-    if booking.people_count > MAX_CAPACITY:
+
+    if booking.place in PLACES_WITH_CAPACITY_CHECK and booking.people_count > MAX_CAPACITY:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail=f"Площадка вмещает максимум {MAX_CAPACITY} человек"
         )
     
@@ -239,9 +239,9 @@ async def update_booking(
         booking.end_date = booking_update.end_date
     
     if booking_update.people_count:
-        if booking_update.people_count > MAX_CAPACITY:
+        if booking.place in PLACES_WITH_CAPACITY_CHECK and booking_update.people_count > MAX_CAPACITY:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Площадка вмещает максимум {MAX_CAPACITY} человек"
             )
         booking.people_count = booking_update.people_count
@@ -329,6 +329,7 @@ async def add_comment(
     db: AsyncSession = Depends(db)
 ):
     """Добавление комментария к бронированию"""
+    logger.info(f"Received new comment: {comment}")
     booking = await get_booking_by_id_db(
         db=db,
         booking_id=comment.booking_id

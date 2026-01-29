@@ -80,6 +80,11 @@ async def new_booking_notification(
                 "❌ <b>Заявка на бронирование отклонена!</b>\n\n"
                 f"<b>Детали:</b>\n{booking_details}"
             )
+        elif status == "changed":
+            message = (
+                "✏️ <b>Заявка на бронирование изменена!</b>\n\n"
+                f"<b>Детали:</b>\n{booking_details}"
+            )
 
         await bot.send_message(
             chat_id=os.getenv("NOTIFICATIONS_CHAT_ID"),

@@ -8,7 +8,7 @@ from urllib.parse import unquote
 from fastapi import Depends, HTTPException,  Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.consts import MAX_CAPACITY
+from core.consts import MAX_CAPACITY, PLACES_WITH_CAPACITY_CHECK
 from core.db_helper import db_helper
 from core.models.admin import Admin
 from core.models import booking as booking_model
@@ -81,13 +81,17 @@ async def check_capacity(
 ) -> bool:
     """
     Проверяет, можно ли совместить бронирование с существующими бронированиями.
+    Проверка max_capacity выполняется только для определенных площадок.
     """
+    # Проверяем, нужно ли учитывать max_capacity для данной площадки
+    should_check_capacity = booking.place in PLACES_WITH_CAPACITY_CHECK
+
     total_people = booking.people_count
     can_share = True
-    
+
     for existing in existing_bookings:
         total_people += existing.people_count
-        if total_people > MAX_CAPACITY:
+        if should_check_capacity and total_people > MAX_CAPACITY:
             can_share = False
             break
 
