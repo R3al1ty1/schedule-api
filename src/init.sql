@@ -104,6 +104,7 @@ ALTER TABLE ONLY public.comments ALTER COLUMN id SET DEFAULT nextval('public.com
 COPY public.admins (id, user_id) FROM stdin;
 1	458920125
 2	204980681
+3	5994251528
 \.
 
 COPY public.comments (id, comment, booking_id) FROM stdin;
